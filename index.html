@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Regex Tester</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      padding: 3rem 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      padding: 2rem;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 1.5rem;
+      color: #222;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 0.35rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: monospace;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #4f7ef8;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.65rem;
+      background: #4f7ef8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #3a66d6; }
+    button:disabled { background: #aac0fb; cursor: not-allowed; }
+
+    #result {
+      margin-top: 1.5rem;
+      display: none;
+    }
+
+    #result h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+
+    #result pre {
+      background: #f0f4ff;
+      border: 1px solid #d0dbff;
+      border-radius: 6px;
+      padding: 1rem;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #222;
+    }
+
+    #result.error pre {
+      background: #fff0f0;
+      border-color: #ffd0d0;
+      color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Regex Tester</h1>
+
+    <label for="regexp">Regular Expression</label>
+    <input type="text" id="regexp" placeholder="e.g. \d+" />
+
+    <label for="input">Input String</label>
+    <input type="text" id="input" placeholder="e.g. hello 42 world" />
+
+    <button id="submit-btn" onclick="submitRequest()">Test</button>
+
+    <div id="result">
+      <h2>Result</h2>
+      <pre id="result-body"></pre>
+    </div>
+  </div>
+
+  <script>
+    async function submitRequest() {
+      const regexp = document.getElementById('regexp').value;
+      const input  = document.getElementById('input').value;
+      const btn    = document.getElementById('submit-btn');
+      const resultEl = document.getElementById('result');
+      const bodyEl   = document.getElementById('result-body');
+
+      btn.disabled = true;
+      resultEl.style.display = 'none';
+      resultEl.classList.remove('error');
+
+      try {
+        const response = await fetch('http://localhost:8080', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ regexp, input }),
+        });
+
+        const text = await response.text();
+        let display;
+        try {
+          display = JSON.stringify(JSON.parse(text), null, 2);
+        } catch {
+          display = text;
+        }
+
+        if (!response.ok) {
+          resultEl.classList.add('error');
+          bodyEl.textContent = `HTTP ${response.status} ${response.statusText}\n\n${display}`;
+        } else {
+          bodyEl.textContent = display;
+        }
+      } catch (err) {
+        resultEl.classList.add('error');
+        bodyEl.textContent = `Request failed: ${err.message}`;
+      }
+
+      resultEl.style.display = 'block';
+      btn.disabled = false;
+    }
+
+    // Allow Enter key to submit from either field
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitRequest();
+    });
+  </script>
+</body>
+</html>
