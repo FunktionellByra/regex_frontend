@@ -152,6 +152,18 @@
       min-width: 5rem;
       text-align: center;
     }
+
+    #input-state {
+      display: flex;
+      gap: 1.5rem;
+      font-family: monospace;
+      font-size: 0.82rem;
+      color: #666;
+      margin-bottom: 0.6rem;
+    }
+
+    #input-state .is-char { color: #4f7ef8; font-weight: 700; }
+    #input-state .is-rest { color: #999; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3/lib/viz-standalone.js"></script>
 </head>
@@ -174,7 +186,10 @@
 
     <br>
     <div id="trace-result"></div>
-    <div id="graph"><div id="graph-body"></div></div>
+    <div id="graph">
+      <div id="input-state"></div>
+      <div id="graph-body"></div>
+    </div>
 
     <div id="trace">
       <div id="trace-controls">
@@ -192,6 +207,7 @@
     let graphvizSrc = null;
     let traceData   = null;
     let traceIdx    = 0;
+    let inputStr    = '';
 
     Viz.instance().then(v => { vizInstance = v; });
 
@@ -215,6 +231,13 @@
 
       document.getElementById('trace-pos').textContent =
         `step ${idx + 1} / ${traceData.length}`;
+
+      // current char = input[i-1] for step i; remaining = input.slice(i)
+      const cur  = idx > 0 ? `'${inputStr[idx - 1]}'` : '—';
+      const rest = inputStr.slice(idx);
+      document.getElementById('input-state').innerHTML =
+        `<span>char: <span class="is-char">${cur}</span></span>` +
+        `<span>remaining: <span class="is-rest">"${rest}"</span></span>`;
     }
 
     function traceStep(delta) {
@@ -235,6 +258,7 @@
       const graphEl   = document.getElementById('graph');
       const traceEl   = document.getElementById('trace');
 
+      inputStr = input;
       btn.disabled = true;
       resultEl.style.display = 'none';
       resultEl.classList.remove('error');
@@ -285,7 +309,6 @@
               graphEl.style.display = 'block';
               renderTraceStep(0);
             } else {
-              // No trace — just render the plain graph
               document.getElementById('graph-body').innerHTML = '';
               document.getElementById('graph-body')
                 .appendChild(vizInstance.renderSVGElement(graphvizSrc));
