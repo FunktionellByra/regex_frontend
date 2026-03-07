@@ -97,7 +97,63 @@
       border-color: #ffd0d0;
       color: #c0392b;
     }
+
+    #graph {
+      margin-top: 1.5rem;
+      display: none;
+      overflow-x: auto;
+    }
+
+    #graph h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+
+    #graph svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    #trace {
+      margin-top: 1.5rem;
+      display: none;
+    }
+
+    #trace-result {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 0.6rem;
+    }
+
+    #trace-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    #trace-controls button {
+      width: auto;
+      padding: 0.3rem 0.65rem;
+      font-size: 1rem;
+      background: #4f7ef8;
+    }
+
+    #trace-controls button:disabled {
+      background: #aac0fb;
+    }
+
+    #trace-pos {
+      font-size: 0.85rem;
+      color: #555;
+      min-width: 5rem;
+      text-align: center;
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3/lib/viz-standalone.js"></script>
 </head>
 <body>
   <div class="card">
@@ -115,19 +171,77 @@
       <h2>Result</h2>
       <pre id="result-body"></pre>
     </div>
+
+    <br>
+    <div id="trace-result"></div>
+    <div id="graph"><div id="graph-body"></div></div>
+
+    <div id="trace">
+      <div id="trace-controls">
+        <button onclick="traceGo(0)" title="First">&#171;</button>
+        <button onclick="traceStep(-1)" title="Previous">&#8249;</button>
+        <span id="trace-pos"></span>
+        <button onclick="traceStep(1)" title="Next">&#8250;</button>
+        <button onclick="traceGo(traceData.length - 1)" title="Last">&#187;</button>
+      </div>
+    </div>
   </div>
 
   <script>
+    let vizInstance = null;
+    let graphvizSrc = null;
+    let traceData   = null;
+    let traceIdx    = 0;
+
+    Viz.instance().then(v => { vizInstance = v; });
+
+    // Build a coloured copy of the graphviz source for a single trace step.
+    // The source must contain exactly one '//COLORS' marker; we inject the
+    // colour attribute for the targeted node immediately after it.
+    function buildColoredGraphviz(gv, traceItem) {
+      const [node, matched] = traceItem;
+      const color = matched ? 'blue' : 'red';
+      const parts = gv.split('//COLORS');
+      return parts[0] + `//COLORS\nS${node} [color=${color},style=filled]\n` + parts[1];
+    }
+
+    function renderTraceStep(idx) {
+      traceIdx = idx;
+      const gv = buildColoredGraphviz(graphvizSrc, traceData[idx]);
+
+      const graphBodyEl = document.getElementById('graph-body');
+      graphBodyEl.innerHTML = '';
+      graphBodyEl.appendChild(vizInstance.renderSVGElement(gv));
+
+      document.getElementById('trace-pos').textContent =
+        `step ${idx + 1} / ${traceData.length}`;
+    }
+
+    function traceStep(delta) {
+      const next = traceIdx + delta;
+      if (next >= 0 && next < traceData.length) renderTraceStep(next);
+    }
+
+    function traceGo(idx) {
+      renderTraceStep(Math.max(0, Math.min(idx, traceData.length - 1)));
+    }
+
     async function submitRequest() {
       const regexp = document.getElementById('regexp').value;
       const input  = document.getElementById('input').value;
       const btn    = document.getElementById('submit-btn');
-      const resultEl = document.getElementById('result');
-      const bodyEl   = document.getElementById('result-body');
+      const resultEl  = document.getElementById('result');
+      const bodyEl    = document.getElementById('result-body');
+      const graphEl   = document.getElementById('graph');
+      const traceEl   = document.getElementById('trace');
 
       btn.disabled = true;
       resultEl.style.display = 'none';
       resultEl.classList.remove('error');
+      graphEl.style.display = 'none';
+      traceEl.style.display = 'none';
+      graphvizSrc = null;
+      traceData   = null;
 
       try {
         const response = await fetch('http://localhost:8080', {
@@ -149,6 +263,35 @@
           bodyEl.textContent = `HTTP ${response.status} ${response.statusText}\n\n${display}`;
         } else {
           bodyEl.textContent = display;
+
+          let parsed;
+          try { parsed = JSON.parse(text); } catch { parsed = null; }
+
+          if (parsed && parsed.graphviz) {
+            graphvizSrc = parsed.graphviz;
+
+            if (parsed.trace && parsed.trace.length > 0) {
+              traceData = parsed.trace;
+              traceIdx  = 0;
+
+              // Show result badge
+              const matchLabel = parsed.matched != null
+                ? String(parsed.matched) === "false" ? "Rejected" : "Accepted"
+                : 'Unknown';
+              document.getElementById('trace-result').textContent =
+                `Result: ${matchLabel}`;
+
+              traceEl.style.display = 'block';
+              graphEl.style.display = 'block';
+              renderTraceStep(0);
+            } else {
+              // No trace — just render the plain graph
+              document.getElementById('graph-body').innerHTML = '';
+              document.getElementById('graph-body')
+                .appendChild(vizInstance.renderSVGElement(graphvizSrc));
+              graphEl.style.display = 'block';
+            }
+          }
         }
       } catch (err) {
         resultEl.classList.add('error');
