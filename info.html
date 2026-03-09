@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.top-button {
+  display: inline-block;
+  margin: 5px 2px 0px 2px;
+  padding: 7px 7px;
+  background: #2d6cdf;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.top-button:hover {
+  background: #1f4fa8;
+}
+</style>
+<body>
+
+<a class="top-button" href="index.html">Back to the visualiser</a>
+
+<div id="content">Loading...</div>
+
+<script>
+fetch("README.md")
+  .then(response => response.text())
+  .then(md => {
+    document.getElementById("content").innerHTML = marked.parse(md);
+  });
+</script>
+
+</body>
+</html>

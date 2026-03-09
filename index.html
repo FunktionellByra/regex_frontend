@@ -162,6 +162,29 @@
       margin-bottom: 0.6rem;
     }
 
+    /* redundancy with info.html start */
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .top-button {
+      display: inline-block;
+      margin: 10px 0px 10px 0px;
+      padding: 7px 7px;
+      background: #2d6cdf;
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      border-radius: 6px;
+      transition: background 0.2s ease;
+    }
+
+    .top-button:hover {
+      background: #1f4fa8;
+    }
+    /* redundancy end */
+
     #input-state .is-char { color: #4f7ef8; font-weight: 700; }
     #input-state .is-rest { color: #999; }
   </style>
@@ -169,13 +192,15 @@
 </head>
 <body>
   <div class="card">
+    <a class="top-button" href="info.html">Click here for: General information about this project</a>
+
     <h1>Regex Tester</h1>
 
     <label for="regexp">Regular Expression</label>
-    <input type="text" id="regexp" placeholder="e.g. \d+" />
+    <input type="text" id="regexp" placeholder="e.g. (ab)*c+" />
 
     <label for="input">Input String</label>
-    <input type="text" id="input" placeholder="e.g. hello 42 world" />
+    <input type="text" id="input" placeholder="e.g. abba" />
 
     <button id="submit-btn" onclick="submitRequest()">Test</button>
 
