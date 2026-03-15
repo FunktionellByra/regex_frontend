@@ -11,7 +11,8 @@
       font-family: system-ui, sans-serif;
       background: #f5f5f5;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       padding: 3rem 1rem;
     }
 
@@ -126,6 +127,7 @@
       font-size: 0.9rem;
       font-weight: 600;
       color: #555;
+      margin-top: 1.5rem;
       margin-bottom: 0.6rem;
     }
 
@@ -162,28 +164,35 @@
       margin-bottom: 0.6rem;
     }
 
-    /* redundancy with info.html start */
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-
-    .top-button {
-      display: inline-block;
-      margin: 10px 0px 10px 0px;
-      padding: 7px 7px;
-      background: #2d6cdf;
-      color: white;
+    .info-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 0.75rem;
+      padding: 0.55rem 0.9rem;
+      background: #fff;
+      border: 1px solid #dde3f0;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      color: #4f7ef8;
+      font-size: 0.85rem;
+      font-weight: 500;
       text-decoration: none;
-      font-size: 14px;
-      border-radius: 6px;
-      transition: background 0.2s ease;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    .top-button:hover {
-      background: #1f4fa8;
+    .info-link:hover {
+      border-color: #4f7ef8;
+      box-shadow: 0 2px 8px rgba(79,126,248,0.15);
     }
-    /* redundancy end */
+
+    .info-link::before {
+      content: 'ℹ';
+      font-size: 1rem;
+      line-height: 1;
+    }
 
     #input-state .is-char { color: #4f7ef8; font-weight: 700; }
     #input-state .is-rest { color: #999; }
@@ -191,9 +200,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3/lib/viz-standalone.js"></script>
 </head>
 <body>
-  <div class="card">
-    <a class="top-button" href="info.html">Click here for: General information about this project</a>
+  <a class="info-link" href="info.html">General information about this project</a>
 
+  <div class="card">
     <h1>Regex Tester</h1>
 
     <label for="regexp">Regular Expression</label>
@@ -228,6 +237,8 @@
   </div>
 
   <script>
+    const DEV_MODE = false; // set to true for extra debug info
+
     let vizInstance = null;
     let graphvizSrc = null;
     let traceData   = null;
@@ -346,7 +357,7 @@
         bodyEl.textContent = `Request failed: ${err.message}`;
       }
 
-      resultEl.style.display = 'block';
+      if (DEV_MODE) resultEl.style.display = 'block';
       btn.disabled = false;
     }
 
