@@ -216,9 +216,11 @@
     <div id="result">
       <h2>Result</h2>
       <pre id="result-body"></pre>
+      
     </div>
 
     <br>
+    <div id="display-nfa-button"> </div>  
     <div id="trace-result"></div>
     <div id="graph">
       <div id="input-state"></div>
@@ -240,7 +242,7 @@
     const DEV_MODE = false; // set to true for extra debug info
 
     let vizInstance = null;
-    let graphvizSrc = null;
+    let graphvizSrcDFA = null;
     let traceData   = null;
     let traceIdx    = 0;
     let inputStr    = '';
@@ -259,7 +261,7 @@
 
     function renderTraceStep(idx) {
       traceIdx = idx;
-      const gv = buildColoredGraphviz(graphvizSrc, traceData[idx]);
+      const gv = buildColoredGraphviz(graphvizSrcDFA, traceData[idx]);
 
       const graphBodyEl = document.getElementById('graph-body');
       graphBodyEl.innerHTML = '';
@@ -272,7 +274,7 @@
       const cur  = idx > 0 ? `'${inputStr[idx - 1]}'` : '—';
       const rest = inputStr.slice(idx);
       document.getElementById('input-state').innerHTML =
-        `<span>char: <span class="is-char">${cur}</span></span>` +
+        `<span>last input: <span class="is-char">${cur}</span></span>` +
         `<span>remaining: <span class="is-rest">"${rest}"</span></span>`;
     }
 
@@ -283,6 +285,10 @@
 
     function traceGo(idx) {
       renderTraceStep(Math.max(0, Math.min(idx, traceData.length - 1)));
+    }
+
+    function openNFA() {
+      window.open("nfadisplay.html");
     }
 
     async function submitRequest() {
@@ -300,7 +306,7 @@
       resultEl.classList.remove('error');
       graphEl.style.display = 'none';
       traceEl.style.display = 'none';
-      graphvizSrc = null;
+      graphvizSrcDFA = null;
       traceData   = null;
 
       try {
@@ -327,14 +333,19 @@
           let parsed;
           try { parsed = JSON.parse(text); } catch { parsed = null; }
 
-          if (parsed && parsed.graphviz) {
-            graphvizSrc = parsed.graphviz;
+          if (parsed && parsed.graphvizNFA && parsed.graphvizDFA) {
+            graphvizNFA = parsed.graphvizNFA
+            sessionStorage.setItem("graphvizNFA", graphvizNFA);
+            graphvizSrcDFA = parsed.graphvizDFA;
 
             if (parsed.trace && parsed.trace.length > 0) {
               traceData = parsed.trace;
               traceIdx  = 0;
 
-              // Show result badge
+              // Show result 
+              displayButton = '<br><button onclick="openNFA()">Open NFA display</button>'
+              document.getElementById('display-nfa-button').innerHTML = displayButton ;
+
               const matchLabel = parsed.matched != null
                 ? String(parsed.matched) === "false" ? "Rejected" : "Accepted"
                 : 'Unknown';
@@ -347,7 +358,7 @@
             } else {
               document.getElementById('graph-body').innerHTML = '';
               document.getElementById('graph-body')
-                .appendChild(vizInstance.renderSVGElement(graphvizSrc));
+                .appendChild(vizInstance.renderSVGElement(graphvizSrcDFA));
               graphEl.style.display = 'block';
             }
           }

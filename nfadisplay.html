@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3/lib/viz-standalone.js"></script>
+</head>
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.top-button {
+  display: inline-block;
+  margin: 5px 2px 0px 2px;
+  padding: 7px 7px;
+  background: #2d6cdf;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.top-button:hover {
+  background: #1f4fa8;
+}
+</style>
+<body>
+
+<div id="graph-body"></div>
+
+<script>
+    let vizInstance = null;
+    Viz.instance().then(v => {
+        vizInstance = v;
+        const graphvizSrcNFA = sessionStorage.getItem("graphvizNFA");
+
+        document.getElementById('graph-body')
+            .appendChild(vizInstance.renderSVGElement(graphvizSrcNFA));
+    });
+</script>
+
+</body>
+</html>
