@@ -246,6 +246,7 @@
     let traceData   = null;
     let traceIdx    = 0;
     let inputStr    = '';
+    let backtracks  = [] // TODO: cleanup after new request
 
     Viz.instance().then(v => { vizInstance = v; });
 
@@ -253,10 +254,22 @@
     // The source must contain exactly one '//COLORS' marker; we inject the
     // colour attribute for the targeted node immediately after it.
     function buildColoredGraphviz(gv, traceItem) {
-      const [node, matched] = traceItem;
+      const [_input, node, matched] = traceItem;
       const color = matched ? 'blue' : 'red';
       const parts = gv.split('//COLORS');
       return parts[0] + `//COLORS\nS${node} [color=${color},style=filled]\n` + parts[1];
+    }
+
+    // find the last occurence of a state to know where the backtracking continues
+    function findInputAfterBacktrack(idx, state) {
+      while (idx > 0) {
+        const [input, node, matched] = traceData[idx]
+        if (matched && node === state) {
+          return traceData[idx-1][0][0]
+        }
+        idx--;
+      }
+      return '-'
     }
 
     function renderTraceStep(idx) {
@@ -270,9 +283,20 @@
       document.getElementById('trace-pos').textContent =
         `step ${idx + 1} / ${traceData.length}`;
 
-      // current char = input[i-1] for step i; remaining = input.slice(i)
-      const cur  = idx > 0 ? `'${inputStr[idx - 1]}'` : '—';
-      const rest = inputStr.slice(idx);
+      // Get input to display
+      const currentInput = traceData[idx][0];
+      const rest = currentInput.slice(0);
+
+      let cur  = null;
+
+      // check if previous state was NOT a success => this means we backtrace
+      if (idx > 0 && !traceData[idx - 1][2]) {
+        cur = findInputAfterBacktrack(idx-1, traceData[idx][1])
+      } else { // else just get the last entered character
+        cur = idx > 0 ? traceData[idx-1][0][0] : '-';
+      }
+
+      // const cur  = currentInput[0] // idx > 0 ? `'${inputStr[idx - 1]}'` : '—';
       document.getElementById('input-state').innerHTML =
         `<span>last input: <span class="is-char">${cur}</span></span>` +
         `<span>remaining: <span class="is-rest">"${rest}"</span></span>`;
