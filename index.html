@@ -241,6 +241,8 @@
   <script>
     const DEV_MODE = false; // set to true for extra debug info
 
+    const apiUrl = '__API_URL__';
+
     let vizInstance = null;
     let graphvizSrcDFA = null;
     let traceData   = null;
@@ -334,7 +336,7 @@
       traceData   = null;
 
       try {
-        const response = await fetch('http://localhost:8080', {
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ regexp, input }),
