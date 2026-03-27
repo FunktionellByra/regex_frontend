@@ -22,6 +22,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: curl server
+        run: | 
+          curl -X POST http://204.168.187.43:8080 \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "regexp": "a*b",
+                  "input": "aaab"
+                }'
+
+
       - name: Inject API_URL
         run: sed -i "s|__API_URL__|${{ secrets.API_URL }}|g" index.html
 
